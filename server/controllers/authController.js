@@ -44,16 +44,19 @@ exports.signup = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.login = (req, res, next) => {
+exports.login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
   // 1- Check if email and password exist
   if (!email || !password) {
     return next(new AppError('Please provide email and password!', 400));
   }
   // 2- Check if user exists && password is correct
-  const currentUser = User.findOne({ email });
+  const currentUser = await User.findOne({ email }).select('+password');
 
-  if (!currentUser || !currentUser.correctPassword(password)) {
+  if (
+    !currentUser ||
+    !(await currentUser.correctPassword(password, currentUser.password))
+  ) {
     return next(new AppError('Incorrect email or password', 401));
   }
   // 3- If everything ok, send token to client
@@ -64,7 +67,7 @@ exports.login = (req, res, next) => {
       token,
     },
   });
-};
+});
 
 exports.logout = (req, res, next) => {
   res.cookie('jwt', 'loggedout', {
@@ -88,11 +91,60 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   const resetToken = currentUser.getResetToken();
 
   await currentUser.save({ validateBeforeSave: false });
+  // convert email to base64 string
+  const encodedEmail = Buffer.from(email).toString('base64');
+
+  const resetURL = `${req.protocol}://${req.get(
+    'host',
+  )}/api/v1/resetPassword/${encodedEmail}/${resetToken}`;
+
   // 3- Send it to user's email
   res.status(200).json({
     status: 'success',
     data: {
-      resetToken,
+      resetURL,
     },
   });
 });
+
+exports.resetPassword = (req, res, next) => {
+  // 1- Get user based on the token
+  const { email, resetToken } = req.params;
+
+  const decodedEmail = Buffer.from(email, 'base64').toString('ascii');
+
+  const currentUser = User.findOne({ email: decodedEmail });
+
+  if (
+    !currentUser ||
+    !currentUser.passwordResetToken ||
+    !currentUser.comparePasswordResetToken(resetToken)
+  ) {
+    return next(new AppError('Invalid token', 400));
+  }
+  // 2- If token has not expired, and there is user, set the new password
+  if (!currentUser.passwordResetExpires > Date.now()) {
+    return next(new AppError('Token has expired', 400));
+  }
+
+  const { password, passwordConfirm } = req.body;
+
+  if (!password || !passwordConfirm || password !== passwordConfirm) {
+    return next(new AppError('Please provide all the required fields!', 400));
+  }
+
+  currentUser.password = password;
+  currentUser.passwordConfirm = passwordConfirm;
+  currentUser.passwordResetToken = undefined;
+  currentUser.passwordResetExpires = undefined;
+
+  currentUser.save();
+  // 4- Log the user in, send JWT
+  const token = signToken(currentUser._id);
+  res.status(200).json({
+    status: 'success',
+    data: {
+      token,
+    },
+  });
+};
