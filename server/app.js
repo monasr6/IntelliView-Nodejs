@@ -1,6 +1,10 @@
 const express = require('express');
 const morgan = require('morgan');
 
+const AppError = require('./utils/appError');
+
+const userRouter = require('./routers/userRouter');
+
 //const userRouter = require('./routes/userRoutes');
 
 const app = express();
@@ -17,9 +21,6 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use((req, res, next) => {
-  req.requestTime = new Date().toISOString();
-  next();
-});
+app.use('api/v1/', userRouter);
 
 module.exports = app;
