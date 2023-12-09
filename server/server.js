@@ -1,25 +1,12 @@
 const dotenv = require('dotenv');
-const mongoose = require('mongoose');
+const connectDB = require('./config/db');
 
 dotenv.config({ path: './config.env' });
 
 const app = require('./app');
 
 // 1) CONNECT TO DB
-
-const connectToDB = async () => {
-  try {
-    await mongoose.connect(process.env.DATABASE, {
-      // .connect(process.env.DATABASE_LOCAL, {
-      useNewUrlParser: true,
-    });
-    console.log('DB connection successful!');
-  } catch (err) {
-    console.log(err);
-  }
-};
-
-connectToDB();
+connectDB();
 
 // 2) START SERVER
 const port = process.env.PORT || 3000;
