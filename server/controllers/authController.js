@@ -66,8 +66,33 @@ exports.login = (req, res, next) => {
   });
 };
 
-exports.forgotPassword = (req, res, next) => {
+exports.logout = (req, res, next) => {
+  res.cookie('jwt', 'loggedout', {
+    expires: new Date(Date.now() - 1000),
+    // secure: true,
+    httpOnly: true,
+  });
   res.status(200).json({
     status: 'success',
   });
 };
+
+exports.forgotPassword = catchAsync(async (req, res, next) => {
+  const { email } = req.body;
+  // 1- Get user based on POSTed email
+  const currentUser = User.findOne({ email });
+  if (!currentUser) {
+    return next(new AppError('There is no user with email address.', 404));
+  }
+  // 2- Generate the random reset token
+  const resetToken = currentUser.getResetToken();
+
+  await currentUser.save({ validateBeforeSave: false });
+  // 3- Send it to user's email
+  res.status(200).json({
+    status: 'success',
+    data: {
+      resetToken,
+    },
+  });
+});
