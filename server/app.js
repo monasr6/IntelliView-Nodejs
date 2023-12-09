@@ -1,8 +1,6 @@
 const express = require('express');
 const morgan = require('morgan');
 
-const AppError = require('./utils/appError');
-
 const userRouter = require('./routers/userRouter');
 
 //const userRouter = require('./routes/userRoutes');
