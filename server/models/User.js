@@ -81,6 +81,13 @@ userSchema.methods.getResetToken = function () {
   return resetToken;
 };
 
+userSchema.methods.comparePasswordResetToken = function (candidateToken) {
+  return (
+    crypto.createHash('sha256').update(candidateToken).digest('hex') ===
+    this.passwordResetToken
+  );
+};
+
 const User = mongoose.model('User', userSchema);
 
 module.exports = User;
