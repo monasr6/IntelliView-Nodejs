@@ -26,21 +26,21 @@ exports.signup = catchAsync(async (req, res, next) => {
   if (!newUser) {
     return next(new AppError('Error creating user', 500));
   }
-  const token = signToken(newUser._id);
+  // const token = signToken(newUser._id);
+  // res.cookie('jwt', token, {
+  //   expires: new Date(
+  //     Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000,
+  //   ),
+  //   // secure: true,
+  //   httpOnly: true,
+  // });
 
-  res.cookie('jwt', token, {
-    expires: new Date(
-      Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000,
-    ),
-    // secure: true,
-    httpOnly: true,
-  });
+  // send email to verify account
+
   // 3- Send back the new user document
   res.status(201).json({
     status: 'success',
-    data: {
-      token,
-    },
+    message: 'User registered successfully',
   });
 });
 
