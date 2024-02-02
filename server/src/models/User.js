@@ -88,6 +88,17 @@ userSchema.methods.comparePasswordResetToken = function (candidateToken) {
   );
 };
 
+userSchema.methods.createEmailVerificationToken = function () {
+  const verificationToken = crypto.randomBytes(32).toString('hex');
+
+  this.emailVerificationToken = crypto
+    .createHash('sha256')
+    .update(verificationToken)
+    .digest('hex');
+
+  return verificationToken;
+};
+
 const User = mongoose.model('User', userSchema);
 
 module.exports = User;

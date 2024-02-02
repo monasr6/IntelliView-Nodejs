@@ -4,6 +4,7 @@ const User = require('../models/User');
 
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
+const Email = require('../utils/emailSender');
 
 const signToken = (id) =>
   jsonwebtoken.sign({ id }, process.env.JWT_SECRET, {
@@ -26,16 +27,15 @@ exports.signup = catchAsync(async (req, res, next) => {
   if (!newUser) {
     return next(new AppError('Error creating user', 500));
   }
-  // const token = signToken(newUser._id);
-  // res.cookie('jwt', token, {
-  //   expires: new Date(
-  //     Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000,
-  //   ),
-  //   // secure: true,
-  //   httpOnly: true,
-  // });
-
   // send email to verify account
+  const verificationToken = newUser.createEmailVerificationToken();
+  await newUser.save({ validateBeforeSave: false });
+
+  const verificationURL = `${req.protocol}://${req.get(
+    'host',
+  )}/api/v1/verifyEmail/${verificationToken}`;
+
+  await new Email(newUser).sendVerifyEmail(verificationURL);
 
   // 3- Send back the new user document
   res.status(201).json({

@@ -1,11 +1,11 @@
 const nodemailer = require('nodemailer');
 const ejs = require('ejs');
+const path = require('path');
 
 module.exports = class Email {
-  constructor(user, url) {
+  constructor(user) {
     this.to = user.email;
     this.firstName = user.name.split(' ')[0];
-    this.url = url;
     this.from = process.env.EMAIL_FROM;
   }
 
@@ -19,7 +19,6 @@ module.exports = class Email {
         },
       });
     }
-
     return nodemailer.createTransport({
       host: process.env.EMAIL_HOST,
       port: process.env.EMAIL_PORT,
@@ -33,9 +32,10 @@ module.exports = class Email {
   async send(template, subject, link) {
     // 1) Render HTML based on a pug template
     const html = await ejs.renderFile(
-      `${__dirname}/../views/email/${template}.ejs`,
+      path.join(__dirname, '..', 'views', 'emails', `${template}.ejs`),
       {
         link,
+        name: this.firstName,
       },
     );
 
@@ -52,7 +52,7 @@ module.exports = class Email {
   }
 
   async sendWelcome(link) {
-    await this.send('welcome', 'Welcome to the Natours Family!', link);
+    await this.send('welcome', 'Welcome to the Inteliview Team', link);
   }
 
   async sendPasswordReset(link) {
