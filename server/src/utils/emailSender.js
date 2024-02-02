@@ -45,6 +45,7 @@ module.exports = class Email {
       to: this.to,
       subject,
       html,
+      text: 'Hello world',
     };
 
     // 3) Create a transport and send email

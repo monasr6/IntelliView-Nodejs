@@ -1,9 +1,10 @@
 const express = require('express');
 const morgan = require('morgan');
 
-const userRouter = require('./routers/authRouter');
+const authRouter = require('./routers/authRouter');
+const verifyRouter = require('./routers/verifyRouter');
 
-//const userRouter = require('./routes/userRoutes');
+//const authRouter = require('./routes/authRoutes');
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use('/api/v1', userRouter);
+app.use('/api/v1/Verify', verifyRouter);
+app.use('/api/v1/Auth', authRouter);
 
 module.exports = app;

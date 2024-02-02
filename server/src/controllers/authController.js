@@ -33,7 +33,7 @@ exports.signup = catchAsync(async (req, res, next) => {
 
   const verificationURL = `${req.protocol}://${req.get(
     'host',
-  )}/api/v1/verifyEmail/${verificationToken}`;
+  )}/api/v1/Verify/verifyEmail/${newUser.id}/${verificationToken}`;
 
   await new Email(newUser).sendVerifyEmail(verificationURL);
 
